@@ -1,16 +1,24 @@
 from flask import Flask, render_template, request
 import pickle
 import numpy as np
+import os
+import logging
 
 # Load the trained model and scaler
-model = pickle.load(open('model.pkl', 'rb'))
-scaler = pickle.load(open('scaler.pkl', 'rb'))
+model_path = os.path.join(os.path.dirname(__file__), 'model.pkl')
+scaler_path = os.path.join(os.path.dirname(__file__), 'scaler.pkl')
 
+model = pickle.load(open(model_path, 'rb'))
+scaler = pickle.load(open(scaler_path, 'rb'))
+
+# Initialize the Flask app
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    # Render the main HTML page (index.html)
+    """
+    Render the main HTML page (index.html)
+    """
     return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
@@ -32,11 +40,14 @@ def predict():
         else:
             result = "You don't have Diabetes."
     except Exception as e:
-        # Handle errors and display them in the UI
+        # Log the error for debugging purposes
+        logging.error(f"Error during prediction: {e}")
         result = f"An error occurred: {e}"
 
     return render_template('index.html', prediction_text=result)
 
 if __name__ == "__main__":
+    # Get the port from the environment variable or default to 5000
+    port = int(os.environ.get("PORT", 5000))
     # Start the Flask server
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=port, debug=True)
